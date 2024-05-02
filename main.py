@@ -74,7 +74,8 @@ def list_blobs_dialogue(dialogue_data, bucket_name = storagebucket):
 function_table = {
     '100': list_blobs,
     '500': dialoguehelper.open_gemini_qa_dialogue,
-    '501': dialoguehelper.open_gemini_fileqa_dialogue
+    '501': dialoguehelper.open_gemini_fileqa_dialogue,
+    '502': dialoguehelper.open_gemini_qa_dialogue_grounded,
 }
 
 def search_sample(
@@ -184,6 +185,19 @@ def handle_card_clicked(event_data):
                                         "type": "NEW_MESSAGE",
                                     },
                                     "text": f"{llm_question}\nRequest submitted, awaiting response... :gemini-animated:",
+                                }, True
+        if invoked_function == 'ask_gemini_grounded':
+            if common := event_data.get('common'):
+                if form_inputs := common.get('formInputs'):
+                    if contact_name := form_inputs.get('llm_question'):
+                        if string_inputs := contact_name.get('stringInputs'):
+                            if llm_question := string_inputs.get('value')[0]:
+                                response_message = geminihelper.generate_grounded(project_id, llm_question)
+                                return {
+                                    "actionResponse": {
+                                        "type": "NEW_MESSAGE",
+                                    },
+                                    "text": f"{response_message}",
                                 }, True
     return {}, False
 

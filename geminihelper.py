@@ -1,7 +1,8 @@
 import base64
 import vertexai
-from vertexai.generative_models import GenerativeModel, Part, FinishReason
+from vertexai.generative_models import GenerativeModel, Part, FinishReason, GenerationConfig, Tool
 import vertexai.preview.generative_models as generative_models
+from vertexai.preview.generative_models import grounding
 from google.cloud import pubsub_v1
 
 def generate(current_project, request):
@@ -20,6 +21,23 @@ def generate(current_project, request):
     qna += response.text
   return qna
 
+def generate_grounded(current_project, request):
+  vertexai.init(project=current_project, location="us-central1")
+  model = GenerativeModel("gemini-1.0-pro-002")
+
+  tool = Tool.from_retrieval(
+    grounding.Retrieval(grounding.VertexAISearch(datastore=f"projects/{current_project}/locations/global/collections/default_collection/dataStores/bailiilegaldemo-ds_1711929181751"))
+    )
+  response = model.generate_content(
+    request,
+    tools=[tool],
+    generation_config=GenerationConfig(
+        temperature=0.0,
+    ),
+)
+
+  print(response)
+  return response
 
 def generate_file_response(current_project, request, filename):
   vertexai.init(project=current_project, location="us-central1")
