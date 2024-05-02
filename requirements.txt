@@ -1,0 +1,10 @@
+Flask==2.3.2
+gunicorn==20.1.0
+oauth2client==4.1.3
+google-api-core
+google-cloud
+google-cloud-discoveryengine
+google-cloud-storage
+protobuf
+google-cloud-aiplatform
+google-cloud-pubsub
