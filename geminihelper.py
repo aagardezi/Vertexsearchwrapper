@@ -37,7 +37,7 @@ def generate_grounded(current_project, request):
 )
 
   print(response)
-  return response.candidates.content.parts.text
+  return response.text
 
 def generate_file_response(current_project, request, filename):
   vertexai.init(project=current_project, location="us-central1")
