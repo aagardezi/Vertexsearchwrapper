@@ -76,6 +76,7 @@ function_table = {
     '500': dialoguehelper.open_gemini_qa_dialogue,
     '501': dialoguehelper.open_gemini_fileqa_dialogue,
     '502': dialoguehelper.open_gemini_qa_dialogue_grounded,
+    '503': dialoguehelper.open_gemini_filecompare_dialogue,
 }
 
 def search_sample(
@@ -236,6 +237,8 @@ def handler():
         command_id = slash_command['commandId']
         if int(command_id) >= 500:
             if int(command_id) == 501:
+                return list_blobs_dialogue(function_table[str(command_id)]())
+            elif int(command_id) == 503:
                 return list_blobs_dialogue(function_table[str(command_id)]())
             else:
                 return function_table[str(command_id)]()
