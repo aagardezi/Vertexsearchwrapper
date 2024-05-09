@@ -193,10 +193,11 @@ def handle_card_clicked(event_data):
                     if contact_name := form_inputs.get('llm_question'):
                         if string_inputs := contact_name.get('stringInputs'):
                             if llm_question := string_inputs.get('value')[0]:
-                                #filepath = form_inputs.get('filename').get('stringInputs').get('value')[0]
+                                filepath1 = form_inputs.get('filename').get('stringInputs').get('value')[0]
+                                filepath2 = form_inputs.get('filename').get('stringInputs').get('value')[1]
                                 print(form_inputs.get('filename'))
                                 space_name = event_data['space']['name']
-                                #geminihelper.publish_gemini_compare_message(project_id, topic_id, llm_question, filepath, space_name)
+                                geminihelper.publish_gemini_compare_message(project_id, topic_id, llm_question, filepath1, filepath2, space_name)
                                 return {
                                     "actionResponse": {
                                         "type": "NEW_MESSAGE",

@@ -71,13 +71,13 @@ safety_settings = {
 def publish_gemini_message(current_project, topic_id, request, filename, space_name):
     publisher = pubsub_v1.PublisherClient()
     topic_path = publisher.topic_path(current_project, topic_id)
-    future = publisher.publish(topic_path, request.encode("utf-8"), uri=filename.split()[0], mime_type=filename.split()[1], spacename=space_name)
+    future = publisher.publish(topic_path, request.encode("utf-8"), request_type="File", uri=filename.split()[0], mime_type=filename.split()[1], spacename=space_name)
     print(future.result())
 
-def publish_gemini_compare_message(current_project, topic_id, request, filename, space_name):
+def publish_gemini_compare_message(current_project, topic_id, request, filename1, filename2, space_name):
     publisher = pubsub_v1.PublisherClient()
     topic_path = publisher.topic_path(current_project, topic_id)
-    future = publisher.publish(topic_path, request.encode("utf-8"), uri=filename.split()[0], mime_type=filename.split()[1], spacename=space_name)
+    future = publisher.publish(topic_path, request.encode("utf-8"), request_type="Compare", uri1=filename1.split()[0], mime_type1=filename1.split()[1], uri2=filename1.split()[0], mime_type2=filename1.split()[1], spacename=space_name)
     print(future.result())
 
 
