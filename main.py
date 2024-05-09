@@ -187,6 +187,22 @@ def handle_card_clicked(event_data):
                                     },
                                     "text": f"{llm_question}\nRequest submitted, awaiting response... :gemini-animated:",
                                 }, True
+        if invoked_function == 'ask_gemini_filecompare':
+            if common := event_data.get('common'):
+                if form_inputs := common.get('formInputs'):
+                    if contact_name := form_inputs.get('llm_question'):
+                        if string_inputs := contact_name.get('stringInputs'):
+                            if llm_question := string_inputs.get('value')[0]:
+                                #filepath = form_inputs.get('filename').get('stringInputs').get('value')[0]
+                                print(form_inputs.get('filename'))
+                                space_name = event_data['space']['name']
+                                #geminihelper.publish_gemini_compare_message(project_id, topic_id, llm_question, filepath, space_name)
+                                return {
+                                    "actionResponse": {
+                                        "type": "NEW_MESSAGE",
+                                    },
+                                    "text": f"{llm_question}\nRequest submitted, awaiting response... :gemini-animated:",
+                                }, True
         if invoked_function == 'ask_gemini_grounded':
             if common := event_data.get('common'):
                 if form_inputs := common.get('formInputs'):

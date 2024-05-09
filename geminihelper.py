@@ -74,4 +74,10 @@ def publish_gemini_message(current_project, topic_id, request, filename, space_n
     future = publisher.publish(topic_path, request.encode("utf-8"), uri=filename.split()[0], mime_type=filename.split()[1], spacename=space_name)
     print(future.result())
 
+def publish_gemini_compare_message(current_project, topic_id, request, filename, space_name):
+    publisher = pubsub_v1.PublisherClient()
+    topic_path = publisher.topic_path(current_project, topic_id)
+    future = publisher.publish(topic_path, request.encode("utf-8"), uri=filename.split()[0], mime_type=filename.split()[1], spacename=space_name)
+    print(future.result())
+
 
