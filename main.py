@@ -104,7 +104,7 @@ def createconversation():
     # Add a document
     data = {
         u'username': username,
-        u'conversationname': conversation.name
+        u'conversationname': u'{conversation.name}'
     }
     users_ref.document(username).set(data)
 
