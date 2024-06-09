@@ -8,3 +8,4 @@ google-cloud-storage
 protobuf
 google-cloud-aiplatform
 google-cloud-pubsub
+google-cloud-firestore

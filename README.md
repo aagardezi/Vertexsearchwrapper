@@ -12,6 +12,49 @@ GCP Project Number
 Agent ID (Vertex AI Search App ID)
 
 
+## Instructions to Enable GCP APIs
+
+```
+gcloud config set project YOUR_PROJECT_ID
+```
+
+Enable Cloud Run APIs
+```
+gcloud services enable run.googleapis.com
+```
+
+Enable Cloud Function APIs
+```
+gcloud services enable \
+    cloudfunctions.googleapis.com \
+    cloudbuild.googleapis.com
+```
+
+
+Enable Vertex AI and Agent Builder APIs
+```
+gcloud services enable \
+    aiplatform.googleapis.com \
+    cloudbuild.googleapis.com \
+    compute.googleapis.com \
+    containerregistry.googleapis.com \
+    artifactregistry.googleapis.com
+```
+
+```
+gcloud services enable \
+    aiplatform.googleapis.com \
+    generativelanguage.googleapis.com \
+    dialogflow.googleapis.com  
+```
+
+```
+gcloud services enable \
+    discoveryengine.googleapis.com  # For using Discovery Engine
+```
+
+
+
 ## Instructions for creating the Cloud Run APP
 ```
 gcloud iam service-accounts create chatbot-handler --description="Receives and processes events from Google Chat" --display-name="Chatbot handler"

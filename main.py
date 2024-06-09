@@ -22,6 +22,8 @@ from google.protobuf.json_format import MessageToDict
 from urllib.parse import urlparse
 from google.cloud import storage
 
+from google.cloud import firestore
+
 import dialoguehelper
 import geminihelper
 
@@ -32,11 +34,12 @@ app = Flask(__name__)
 project_id = os.environ.get("PROJECT_ID")
 location = "global"          # Values: "global", "us", "eu"
 engine_id = os.environ.get("AGENT_ID")
+datastore_id = os.environ.get("DATASTORE_ID")
 
 storagebucket = os.environ.get("STORAGE_BUCKET_URI")
 
 topic_id = os.environ.get("TOPIC_ID")
-
+username=''
 
 
 def list_blobs(bucket_name = storagebucket):
@@ -71,8 +74,88 @@ def list_blobs_dialogue(dialogue_data, bucket_name = storagebucket):
     
     return dialogue_data
 
+def createconversation():
+    client_options = (
+        ClientOptions(api_endpoint=f"{location}-discoveryengine.googleapis.com")
+        if location != "global"
+        else None
+    )
+
+    # Create a client
+    client = discoveryengine.ConversationalSearchServiceClient(
+        client_options=client_options
+    )
+
+    # Initialize Multi-Turn Session
+    conversation = client.create_conversation(
+        # The full resource name of the data store
+        # e.g. projects/{project_id}/locations/{location}/dataStores/{data_store_id}
+        parent=client.data_store_path(
+            project=project_id, location=location, data_store=datastore_id
+        ),
+        conversation=discoveryengine.Conversation(),
+    )
+
+    db = firestore.Client()
+
+    # Reference to a collection
+    users_ref = db.collection(u'chatconversations')
+
+    # Add a document
+    data = {
+        u'username': username,
+        u'conversationname': conversation.name
+    }
+    users_ref.document(username).set(data)
+
+def conversationexists():
+    db = firestore.Client()
+    doc = db.collection(u'chatconversations').document(username).get()
+    if doc.exists:
+        return True
+    return False
+
+def search_conversation(prompt):
+    db = firestore.Client()
+    doc = db.collection(u'chatconversations').document(username).get()
+    if doc.exists:
+        client_options = (
+            ClientOptions(api_endpoint=f"{location}-discoveryengine.googleapis.com")
+            if location != "global"
+            else None
+        )
+
+        # Create a client
+        client = discoveryengine.ConversationalSearchServiceClient(
+            client_options=client_options
+        )
+        request = discoveryengine.ConverseConversationRequest(
+            name=doc['conversationname'],
+            query=discoveryengine.TextInput(input=prompt),
+            serving_config=client.serving_config_path(
+                project=project_id,
+                location=location,
+                data_store=datastore_id,
+                serving_config="default_config",
+            ),
+            # Options for the returned summary
+            summary_spec=discoveryengine.SearchRequest.ContentSearchSpec.SummarySpec(
+                # Number of results to include in summary
+                summary_result_count=10,
+                include_citations=True,
+            ),
+        )
+        response = client.converse_conversation(request)
+
+        return {'text': response.reply.summary.summary_text}, 200
+
+
+
+
+
 function_table = {
     '100': list_blobs,
+    '200': createconversation,
     '500': dialoguehelper.open_gemini_qa_dialogue,
     '501': dialoguehelper.open_gemini_fileqa_dialogue,
     '502': dialoguehelper.open_gemini_qa_dialogue_grounded,
@@ -108,13 +191,13 @@ def search_sample(
         # For information about search summaries, refer to:
         # https://cloud.google.com/generative-ai-app-builder/docs/get-search-summaries
         summary_spec=discoveryengine.SearchRequest.ContentSearchSpec.SummarySpec(
-            summary_result_count=5,
+            summary_result_count=10,
             include_citations=True,
             ignore_adversarial_query=True,
             ignore_non_summary_seeking_query=True,
-            # model_prompt_spec=discoveryengine.SearchRequest.ContentSearchSpec.SummarySpec.ModelPromptSpec(
-            #     preamble="YOUR_CUSTOM_PROMPT"
-            # ),
+            model_prompt_spec=discoveryengine.SearchRequest.ContentSearchSpec.SummarySpec.ModelPromptSpec(
+                preamble="make sure you evaluate a full name before answering questions regarding named individuals. If the exact named individual is not found say you dont know. Also any question where you are not confident of the answer do not make up an answer. Make sure the result has formatting."
+            ),
             model_spec=discoveryengine.SearchRequest.ContentSearchSpec.SummarySpec.ModelSpec(
                 version="preview",
             ),
@@ -247,8 +330,7 @@ def handler():
     if card_clicked_flag:
         return cardresponse
     
-                                
-
+    username = event_data["user"]["name"]
     
     if slash_command := event_data.get('message', dict()).get('slashCommand'):
         command_id = slash_command['commandId']
@@ -285,6 +367,9 @@ def handler():
 
     # Query Vertex Search app
     else:
+        if conversationexists:
+            return search_conversation(text)
+    
         answer = search_sample(text)
         #responses = answer['responseMessages']
         #output_message = responses[0]['text']['text'][0]
