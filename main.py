@@ -39,7 +39,7 @@ datastore_id = os.environ.get("DATASTORE_ID")
 storagebucket = os.environ.get("STORAGE_BUCKET_URI")
 
 topic_id = os.environ.get("TOPIC_ID")
-username=''
+
 
 
 def list_blobs(bucket_name = storagebucket):
@@ -74,7 +74,7 @@ def list_blobs_dialogue(dialogue_data, bucket_name = storagebucket):
     
     return dialogue_data
 
-def createconversation():
+def createconversation(username):
     client_options = (
         ClientOptions(api_endpoint=f"{location}-discoveryengine.googleapis.com")
         if location != "global"
@@ -103,24 +103,24 @@ def createconversation():
 
     # Add a document
     data = {
-        u'username': 'u{username}',
-        u'conversationname': u'{conversation.name}'
+        u'username': username,
+        u'conversationname': conversation.name
     }
     print(username)
     print(conversation.name)
-    users_ref.document('u{username}').set(data)
-    return "Conversation created {conversation.name}"
+    users_ref.document(username).set(data)
+    return f"Conversation created {conversation.name}"
 
-def conversationexists():
+def conversationexists(username):
     db = firestore.Client()
-    doc = db.collection(u'chatconversations').document('u{username}').get()
+    doc = db.collection(u'chatconversations').document(username).get()
     if doc.exists:
         return True
     return False
 
-def search_conversation(prompt):
+def search_conversation(prompt, username):
     db = firestore.Client()
-    doc = db.collection(u'chatconversations').document('u{username}').get()
+    doc = db.collection(u'chatconversations').document(username).get()
     if doc.exists:
         client_options = (
             ClientOptions(api_endpoint=f"{location}-discoveryengine.googleapis.com")
@@ -337,6 +337,8 @@ def handler():
     
     if slash_command := event_data.get('message', dict()).get('slashCommand'):
         command_id = slash_command['commandId']
+        if int(command_id) == 200:
+            return {'text': function_table[str(command_id)](username)}, 200
         if int(command_id) >= 500:
             if int(command_id) == 501:
                 return list_blobs_dialogue(function_table[str(command_id)]())
@@ -370,8 +372,8 @@ def handler():
 
     # Query Vertex Search app
     else:
-        if conversationexists:
-            return search_conversation(text)
+        if conversationexists(username):
+            return search_conversation(text, username)
     
         answer = search_sample(text)
         #responses = answer['responseMessages']
