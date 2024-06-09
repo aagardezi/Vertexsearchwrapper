@@ -333,7 +333,7 @@ def handler():
     if card_clicked_flag:
         return cardresponse
     
-    username = event_data["user"]["name"]
+    username = event_data["user"]["name"].split('/')[1]
     
     if slash_command := event_data.get('message', dict()).get('slashCommand'):
         command_id = slash_command['commandId']
