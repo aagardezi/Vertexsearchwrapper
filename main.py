@@ -107,6 +107,7 @@ def createconversation():
         u'conversationname': u'{conversation.name}'
     }
     users_ref.document(username).set(data)
+    return "Conversation created {conversation.name}"
 
 def conversationexists():
     db = firestore.Client()
