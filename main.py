@@ -103,22 +103,24 @@ def createconversation():
 
     # Add a document
     data = {
-        u'username': username,
+        u'username': 'u{username}',
         u'conversationname': u'{conversation.name}'
     }
-    users_ref.document(username).set(data)
+    print(username)
+    print(conversation.name)
+    users_ref.document('u{username}').set(data)
     return "Conversation created {conversation.name}"
 
 def conversationexists():
     db = firestore.Client()
-    doc = db.collection(u'chatconversations').document(username).get()
+    doc = db.collection(u'chatconversations').document('u{username}').get()
     if doc.exists:
         return True
     return False
 
 def search_conversation(prompt):
     db = firestore.Client()
-    doc = db.collection(u'chatconversations').document(username).get()
+    doc = db.collection(u'chatconversations').document('u{username}').get()
     if doc.exists:
         client_options = (
             ClientOptions(api_endpoint=f"{location}-discoveryengine.googleapis.com")
