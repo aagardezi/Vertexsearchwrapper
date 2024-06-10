@@ -26,6 +26,7 @@ from google.cloud import firestore
 
 import dialoguehelper
 import geminihelper
+import agentsearchhelper
 
 
 
@@ -74,199 +75,19 @@ def list_blobs_dialogue(dialogue_data, bucket_name = storagebucket):
     
     return dialogue_data
 
-def createconversation(username):
-    client_options = (
-        ClientOptions(api_endpoint=f"{location}-discoveryengine.googleapis.com")
-        if location != "global"
-        else None
-    )
-
-    # Create a client
-    client = discoveryengine.ConversationalSearchServiceClient(
-        client_options=client_options
-    )
-
-    # Initialize Multi-Turn Session
-    conversation = client.create_conversation(
-        # The full resource name of the data store
-        # e.g. projects/{project_id}/locations/{location}/dataStores/{data_store_id}
-        parent=client.data_store_path(
-            project=project_id, location=location, data_store=datastore_id
-        ),
-        conversation=discoveryengine.Conversation(),
-    )
-
-    db = firestore.Client()
-
-    # Reference to a collection
-    users_ref = db.collection(u'chatconversations')
-
-    # Add a document
-    data = {
-        u'username': username,
-        u'conversationname': conversation.name
-    }
-    print(username)
-    print(conversation.name)
-    users_ref.document(username).set(data)
-    return f"Conversation created {conversation.name}"
-
-def conversationexists(username):
-    db = firestore.Client()
-    doc = db.collection(u'chatconversations').document(username).get()
-    if doc.exists:
-        return True
-    return False
-
-def search_conversation(prompt, username):
-    db = firestore.Client()
-    doc = db.collection(u'chatconversations').document(username).get()
-    if doc.exists:
-        client_options = (
-            ClientOptions(api_endpoint=f"{location}-discoveryengine.googleapis.com")
-            if location != "global"
-            else None
-        )
-
-        # Create a client
-        client = discoveryengine.ConversationalSearchServiceClient(
-            client_options=client_options
-        )
-        request = discoveryengine.ConverseConversationRequest(
-            name=doc.to_dict().get('conversationname'),
-            query=discoveryengine.TextInput(input=prompt),
-            serving_config=client.serving_config_path(
-                project=project_id,
-                location=location,
-                data_store=datastore_id,
-                serving_config="default_config",
-            ),
-            # Options for the returned summary
-            summary_spec=discoveryengine.SearchRequest.ContentSearchSpec.SummarySpec(
-                # Number of results to include in summary
-                summary_result_count=10,
-                include_citations=True,
-                model_prompt_spec=discoveryengine.SearchRequest.ContentSearchSpec.SummarySpec.ModelPromptSpec(
-                preamble="make sure you evaluate a full name before answering questions regarding named individuals. If the exact named individual is not found say you dont know. Also any question where you are not confident of the answer do not make up an answer. Make sure the result has formatting."
-                ),
-                model_spec=discoveryengine.SearchRequest.ContentSearchSpec.SummarySpec.ModelSpec(
-                    version="preview",
-                ),
-            ),
-        )
-        response = client.converse_conversation(request)
-
-        # filelist = ''
-        # for i, result in enumerate(response.search_results, 1):
-        #     result_data = result.document.derived_struct_data
-        #     filelist = filelist +'\n' + f'[{i}] ' + result_data['link']
-
-        #above code has been refactored into a funciton that can be used with all outputs
-        filelist = format_links(response.search_results)
-
-        return {'text': response.reply.summary.summary_text+ '\n' + filelist }, 200
-
-
-def stopconversation(username):
-     db = firestore.Client()
-     doc = db.collection(u'chatconversations').document(username).delete()
-     return "Conversation delete"
-
-
-def format_links(results):
-    filelist = ''
-    for i, result in enumerate(results, 1):
-        result_data = result.document.derived_struct_data
-        filelist = filelist +'\n' + f'[{i}] https://storage.cloud.google.com/' + urlparse(result_data['link']).hostname + urlparse(result_data['link']).path
-    return filelist
-
 
 
 function_table = {
     '100': list_blobs,
-    '200': createconversation, #multi turn chat start
-    '210': stopconversation, #multi turn chat stop
+    '200': agentsearchhelper.createconversation, #multi turn chat start
+    '210': agentsearchhelper.stopconversation, #multi turn chat stop
     '500': dialoguehelper.open_gemini_qa_dialogue,
     '501': dialoguehelper.open_gemini_fileqa_dialogue,
     '502': dialoguehelper.open_gemini_qa_dialogue_grounded,
     '503': dialoguehelper.open_gemini_filecompare_dialogue,
 }
 
-def search_sample(
-    prompt: str,
-):
-    #  For more information, refer to:
-    # https://cloud.google.com/generative-ai-app-builder/docs/locations#specify_a_multi-region_for_your_data_store
-    client_options = (
-        ClientOptions(api_endpoint=f"{location}-discoveryengine.googleapis.com")
-        if location != "global"
-        else None
-    )
 
-    # Create a client
-    client = discoveryengine.SearchServiceClient(client_options=client_options)
-
-    # The full resource name of the search app serving config
-    serving_config = f"projects/{project_id}/locations/{location}/collections/default_collection/engines/{engine_id}/servingConfigs/default_config"
-
-    # Optional: Configuration options for search
-    # Refer to the `ContentSearchSpec` reference for all supported fields:
-    # https://cloud.google.com/python/docs/reference/discoveryengine/latest/google.cloud.discoveryengine_v1.types.SearchRequest.ContentSearchSpec
-    content_search_spec = discoveryengine.SearchRequest.ContentSearchSpec(
-        # For information about snippets, refer to:
-        # https://cloud.google.com/generative-ai-app-builder/docs/snippets
-        snippet_spec=discoveryengine.SearchRequest.ContentSearchSpec.SnippetSpec(
-            return_snippet=True
-        ),
-        # For information about search summaries, refer to:
-        # https://cloud.google.com/generative-ai-app-builder/docs/get-search-summaries
-        summary_spec=discoveryengine.SearchRequest.ContentSearchSpec.SummarySpec(
-            summary_result_count=10,
-            include_citations=True,
-            ignore_adversarial_query=True,
-            ignore_non_summary_seeking_query=True,
-            model_prompt_spec=discoveryengine.SearchRequest.ContentSearchSpec.SummarySpec.ModelPromptSpec(
-                preamble="make sure you evaluate a full name before answering questions regarding named individuals. If the exact named individual is not found say you dont know. Also any question where you are not confident of the answer do not make up an answer. Make sure the result has formatting."
-            ),
-            model_spec=discoveryengine.SearchRequest.ContentSearchSpec.SummarySpec.ModelSpec(
-                version="preview",
-            ),
-        ),
-        extractive_content_spec = discoveryengine.SearchRequest.ContentSearchSpec.ExtractiveContentSpec(
-            max_extractive_answer_count = 1
-        ),
-    )
-
-    # Refer to the `SearchRequest` reference for all supported fields:
-    # https://cloud.google.com/python/docs/reference/discoveryengine/latest/google.cloud.discoveryengine_v1.types.SearchRequest
-    request = discoveryengine.SearchRequest(
-        serving_config=serving_config,
-        query=prompt,
-        page_size=10,
-        content_search_spec=content_search_spec,
-        query_expansion_spec=discoveryengine.SearchRequest.QueryExpansionSpec(
-            condition=discoveryengine.SearchRequest.QueryExpansionSpec.Condition.AUTO,
-        ),
-        spell_correction_spec=discoveryengine.SearchRequest.SpellCorrectionSpec(
-            mode=discoveryengine.SearchRequest.SpellCorrectionSpec.Mode.AUTO
-        ),
-    )
-
-    response = client.search(request)
-    filelist = ''
-    i=0
-    for result in response.results:
-        i=i+1
-        if i>5:
-            break
-        document_dict = MessageToDict(
-            result.document._pb, preserving_proto_field_name=True
-        )
-        derived_struct_data = document_dict.get("derived_struct_data")
-        filelist = filelist + '\n' + f'[{i}] https://storage.cloud.google.com/' + urlparse(derived_struct_data.get("link", "")).hostname + urlparse(derived_struct_data.get("link", "")).path
-
-    # print(response.summary.summary_text)
-    return response.summary.summary_text + '\n' + filelist 
 
 def handle_card_clicked(event_data):
     if event_data.get('type') == 'CARD_CLICKED':
@@ -402,10 +223,10 @@ def handler():
 
     # Query Vertex Search app
     else:
-        if conversationexists(username):
-            return search_conversation(text, username)
+        if agentsearchhelper.conversationexists(username):
+            return agentsearchhelper.search_conversation(text, username)
     
-        answer = search_sample(text)
+        answer = agentsearchhelper.search_simple(text)
         #responses = answer['responseMessages']
         #output_message = responses[0]['text']['text'][0]
         output_message = answer
