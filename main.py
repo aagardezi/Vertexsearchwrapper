@@ -165,6 +165,11 @@ def search_conversation(prompt, username):
 
         return {'text': response.reply.summary.summary_text+ '\n' + filelist }, 200
 
+def stopconversation(username):
+     db = firestore.Client()
+     doc = db.collection(u'chatconversations').document(username).delete()
+     return "Conversation delete"
+
 
 
 
@@ -172,6 +177,7 @@ def search_conversation(prompt, username):
 function_table = {
     '100': list_blobs,
     '200': createconversation,
+    '210': stopconversation,
     '500': dialoguehelper.open_gemini_qa_dialogue,
     '501': dialoguehelper.open_gemini_fileqa_dialogue,
     '502': dialoguehelper.open_gemini_qa_dialogue_grounded,
@@ -351,6 +357,8 @@ def handler():
     if slash_command := event_data.get('message', dict()).get('slashCommand'):
         command_id = slash_command['commandId']
         if int(command_id) == 200:
+            return {'text': function_table[str(command_id)](username)}, 200
+        if int(command_id) == 210:
             return {'text': function_table[str(command_id)](username)}, 200
         if int(command_id) >= 500:
             if int(command_id) == 501:
