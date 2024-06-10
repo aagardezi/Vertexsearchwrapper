@@ -146,6 +146,12 @@ def search_conversation(prompt, username):
                 # Number of results to include in summary
                 summary_result_count=10,
                 include_citations=True,
+                model_prompt_spec=discoveryengine.SearchRequest.ContentSearchSpec.SummarySpec.ModelPromptSpec(
+                preamble="make sure you evaluate a full name before answering questions regarding named individuals. If the exact named individual is not found say you dont know. Also any question where you are not confident of the answer do not make up an answer. Make sure the result has formatting."
+                ),
+                model_spec=discoveryengine.SearchRequest.ContentSearchSpec.SummarySpec.ModelSpec(
+                    version="preview",
+                ),
             ),
         )
         response = client.converse_conversation(request)
