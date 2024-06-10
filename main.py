@@ -150,7 +150,20 @@ def search_conversation(prompt, username):
         )
         response = client.converse_conversation(request)
 
-        return {'text': response.reply.summary.summary_text}, 200
+        filelist = ''
+        i=0
+        for result in response.results:
+            i=i+1
+            if i>5:
+                break
+            document_dict = MessageToDict(
+                result.document._pb, preserving_proto_field_name=True
+            )
+            derived_struct_data = document_dict.get("derived_struct_data")
+            filelist = filelist + '\n' + f'[{i}] https://storage.cloud.google.com/' + urlparse(derived_struct_data.get("link", "")).hostname + urlparse(derived_struct_data.get("link", "")).path
+
+
+        return {'text': response.reply.summary.summary_text+ '\n' + filelist }, 200
 
 
 
