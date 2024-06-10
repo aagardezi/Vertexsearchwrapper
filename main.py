@@ -133,7 +133,7 @@ def search_conversation(prompt, username):
             client_options=client_options
         )
         request = discoveryengine.ConverseConversationRequest(
-            name=doc['conversationname'],
+            name=doc.to_dict().get('conversationname'),
             query=discoveryengine.TextInput(input=prompt),
             serving_config=client.serving_config_path(
                 project=project_id,
