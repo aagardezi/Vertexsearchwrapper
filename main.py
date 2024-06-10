@@ -157,12 +157,9 @@ def search_conversation(prompt, username):
         response = client.converse_conversation(request)
 
         filelist = ''
-        i=0
-        for result in response.reply.references:
-            i=i+1
-            if i>5:
-                break
-            filelist = filelist + '\n' + result.uri
+        for i, result in enumerate(response.search_results, 1):
+            result_data = result.document.derived_struct_data
+            filelist = filelist +'\n' + f'[{i}]' + result_data['link']
 
         return {'text': response.reply.summary.summary_text+ '\n' + filelist }, 200
 
@@ -177,8 +174,8 @@ def stopconversation(username):
 
 function_table = {
     '100': list_blobs,
-    '200': createconversation,
-    '210': stopconversation,
+    '200': createconversation, #multi turn chat start
+    '210': stopconversation, #multi turn chat stop
     '500': dialoguehelper.open_gemini_qa_dialogue,
     '501': dialoguehelper.open_gemini_fileqa_dialogue,
     '502': dialoguehelper.open_gemini_qa_dialogue_grounded,
@@ -353,6 +350,7 @@ def handler():
     if card_clicked_flag:
         return cardresponse
     
+    #username of the current chat user so we can start a conversation thread for multi turn
     username = event_data["user"]["name"].split('/')[1]
     
     if slash_command := event_data.get('message', dict()).get('slashCommand'):
