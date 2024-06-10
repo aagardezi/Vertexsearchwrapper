@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 from google.cloud import storage
 
 from google.cloud import firestore
+from datetime import datetime
 
 project_id = os.environ.get("PROJECT_ID")
 location = "global"          # Values: "global", "us", "eu"
@@ -44,10 +45,13 @@ def createconversation(username):
     # Reference to a collection
     users_ref = db.collection(u'chatconversations')
 
+    timestamp = datetime.utcnow().isoformat()
+
     # Add a document
     data = {
         u'username': username,
-        u'conversationname': conversation.name
+        u'conversationname': conversation.name,
+        u'timestamp': timestamp
     }
     print(username)
     print(conversation.name)
