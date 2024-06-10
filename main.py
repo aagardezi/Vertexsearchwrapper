@@ -156,12 +156,16 @@ def search_conversation(prompt, username):
         )
         response = client.converse_conversation(request)
 
-        filelist = ''
-        for i, result in enumerate(response.search_results, 1):
-            result_data = result.document.derived_struct_data
-            filelist = filelist +'\n' + f'[{i}]' + result_data['link']
+        # filelist = ''
+        # for i, result in enumerate(response.search_results, 1):
+        #     result_data = result.document.derived_struct_data
+        #     filelist = filelist +'\n' + f'[{i}] ' + result_data['link']
+
+        #above code has been refactored into a funciton that can be used with all outputs
+        filelist = format_links(response.search_results)
 
         return {'text': response.reply.summary.summary_text+ '\n' + filelist }, 200
+
 
 def stopconversation(username):
      db = firestore.Client()
@@ -169,6 +173,12 @@ def stopconversation(username):
      return "Conversation delete"
 
 
+def format_links(results):
+    filelist = ''
+    for i, result in enumerate(results, 1):
+        result_data = result.document.derived_struct_data
+        filelist = filelist +'\n' + f'[{i}] https://storage.cloud.google.com/' + urlparse(result_data['link']).hostname + urlparse(result_data['link']).path
+    return filelist
 
 
 
