@@ -180,7 +180,7 @@ def search_simple(
     )
 
     response = client.search(request)
-    filelist = format_links(response.search_results)
+    filelist = format_links(response.results)
     # i=0
     # for result in response.results:
     #     i=i+1
