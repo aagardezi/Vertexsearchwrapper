@@ -1,4 +1,5 @@
 from typing import Any, Mapping
+import geminihelper
 
 def open_gemini_qa_dialogue() -> Mapping[str, Any]:
     return {
@@ -177,3 +178,67 @@ def open_gemini_filecompare_dialogue() -> Mapping[str, Any]:
                 }
             ]
             }}}}}
+
+def handle_card_clicked(event_data, project_id):
+    if event_data.get('type') == 'CARD_CLICKED':
+        invoked_function = event_data.get('common', dict()).get('invokedFunction')
+        if invoked_function == 'ask_gemini':
+            if common := event_data.get('common'):
+                if form_inputs := common.get('formInputs'):
+                    if contact_name := form_inputs.get('llm_question'):
+                        if string_inputs := contact_name.get('stringInputs'):
+                            if llm_question := string_inputs.get('value')[0]:
+                                response_message = geminihelper.generate(project_id, llm_question)
+                                return {
+                                    "actionResponse": {
+                                        "type": "NEW_MESSAGE",
+                                    },
+                                    "text": f"{response_message}",
+                                }, True
+        
+        if invoked_function == 'ask_gemini_file':
+            if common := event_data.get('common'):
+                if form_inputs := common.get('formInputs'):
+                    if contact_name := form_inputs.get('llm_question'):
+                        if string_inputs := contact_name.get('stringInputs'):
+                            if llm_question := string_inputs.get('value')[0]:
+                                filepath = form_inputs.get('filename').get('stringInputs').get('value')[0]
+                                space_name = event_data['space']['name']
+                                geminihelper.publish_gemini_message(project_id, topic_id, llm_question, filepath, space_name)
+                                return {
+                                    "actionResponse": {
+                                        "type": "NEW_MESSAGE",
+                                    },
+                                    "text": f"{llm_question}\nRequest submitted, awaiting response... :gemini-animated:",
+                                }, True
+        if invoked_function == 'ask_gemini_filecompare':
+            if common := event_data.get('common'):
+                if form_inputs := common.get('formInputs'):
+                    if contact_name := form_inputs.get('llm_question'):
+                        if string_inputs := contact_name.get('stringInputs'):
+                            if llm_question := string_inputs.get('value')[0]:
+                                filepath1 = form_inputs.get('filename').get('stringInputs').get('value')[0]
+                                filepath2 = form_inputs.get('filename').get('stringInputs').get('value')[1]
+                                print(form_inputs.get('filename'))
+                                space_name = event_data['space']['name']
+                                geminihelper.publish_gemini_compare_message(project_id, topic_id, llm_question, filepath1, filepath2, space_name)
+                                return {
+                                    "actionResponse": {
+                                        "type": "NEW_MESSAGE",
+                                    },
+                                    "text": f"{llm_question}\nRequest submitted, awaiting response... :gemini-animated:",
+                                }, True
+        if invoked_function == 'ask_gemini_grounded':
+            if common := event_data.get('common'):
+                if form_inputs := common.get('formInputs'):
+                    if contact_name := form_inputs.get('llm_question'):
+                        if string_inputs := contact_name.get('stringInputs'):
+                            if llm_question := string_inputs.get('value')[0]:
+                                response_message = geminihelper.generate_grounded(project_id, llm_question)
+                                return {
+                                    "actionResponse": {
+                                        "type": "NEW_MESSAGE",
+                                    },
+                                    "text": f"{response_message}",
+                                }, True
+    return {}, False
