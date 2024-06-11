@@ -4,9 +4,7 @@
 Receives an input chat message via Google Chat, then processes and sends a reply back to the user
 """
 
-import json
 import os
-import uuid
 
 from flask import Flask, request
 from oauth2client import client
@@ -25,8 +23,8 @@ from google.cloud import storage
 from google.cloud import firestore
 
 import dialoguehelper
-import geminihelper
 import agentsearchhelper
+import utils
 
 
 
@@ -40,45 +38,11 @@ datastore_id = os.environ.get("DATASTORE_ID")
 storagebucket = os.environ.get("STORAGE_BUCKET_URI")
 
 topic_id = os.environ.get("TOPIC_ID")
-
-
-
-def list_blobs(bucket_name = storagebucket):
-    """Lists all the blobs in the bucket."""
-    # bucket_name = "your-bucket-name"
-    storage_client = storage.Client()
-
-    # Note: Client.list_blobs requires at least package version 1.17.0.
-    blobs = storage_client.list_blobs(bucket_name)
-    listofblobs=''
-    i=0
-    for blob in blobs:
-        i=i+1
-        listofblobs = f"[{i}] gs://" + blob.bucket.name + "/" + blob.name + '\n'
-    return listofblobs
-
-def list_blobs_dialogue(dialogue_data, bucket_name = storagebucket):
-    """Lists all the blobs in the bucket."""
-    # bucket_name = "your-bucket-name"
-    storage_client = storage.Client()
-
-    # Note: Client.list_blobs requires at least package version 1.17.0.
-    blobs = storage_client.list_blobs(bucket_name)
-    listofblobs=''
-    i=0
-    for blob in blobs:
-        items ={}
-        items['text'] = f"gs://" + blob.bucket.name + "/" + blob.name
-        items['value'] = f"gs://" + blob.bucket.name + "/" + blob.name + ' ' + blob.content_type
-        items['selected'] = False
-        dialogue_data["action_response"]["dialog_action"]["dialog"]["body"]["sections"][0]["widgets"][0]["selectionInput"]["items"].append(items)
-    
-    return dialogue_data
-
+AUDIENCE = os.environ.get('PROJECT_NUMBER')
 
 
 function_table = {
-    '100': list_blobs,
+    '100': utils.list_blobs,
     '200': agentsearchhelper.createconversation, #multi turn chat start
     '210': agentsearchhelper.stopconversation, #multi turn chat stop
     '500': dialoguehelper.open_gemini_qa_dialogue,
@@ -102,7 +66,6 @@ def handler():
     # Verify request is sourced from Google Chat - https://developers.google.com/chat/api/guides/message-formats
     CHAT_ISSUER = 'chat@system.gserviceaccount.com'
     PUBLIC_CERT_URL_PREFIX = 'https://www.googleapis.com/service_accounts/v1/metadata/x509/'
-    AUDIENCE = os.environ.get('PROJECT_NUMBER')
     BEARER_TOKEN = request.headers['Authorization'].replace('Bearer ', '')
     try:
         token = client.verify_id_token(BEARER_TOKEN, AUDIENCE, cert_uri=PUBLIC_CERT_URL_PREFIX + CHAT_ISSUER)
@@ -115,7 +78,7 @@ def handler():
     if 'space' not in event_data:
         return 'This service only processes events sent from Google Chat', 400
 
-    cardresponse, card_clicked_flag = dialoguehelper.handle_card_clicked(event_data, project_id)
+    cardresponse, card_clicked_flag = dialoguehelper.handle_card_clicked(event_data, project_id, topic_id)
     if card_clicked_flag:
         return cardresponse
     
@@ -130,9 +93,9 @@ def handler():
             return {'text': function_table[str(command_id)](username)}, 200
         if int(command_id) >= 500:
             if int(command_id) == 501:
-                return list_blobs_dialogue(function_table[str(command_id)]())
+                return utils.list_blobs_dialogue(function_table[str(command_id)]())
             elif int(command_id) == 503:
-                return list_blobs_dialogue(function_table[str(command_id)]())
+                return utils.list_blobs_dialogue(function_table[str(command_id)]())
             else:
                 return function_table[str(command_id)]()
         else:

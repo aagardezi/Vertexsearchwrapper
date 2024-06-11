@@ -179,7 +179,7 @@ def open_gemini_filecompare_dialogue() -> Mapping[str, Any]:
             ]
             }}}}}
 
-def handle_card_clicked(event_data, project_id):
+def handle_card_clicked(event_data, project_id, topic_id):
     if event_data.get('type') == 'CARD_CLICKED':
         invoked_function = event_data.get('common', dict()).get('invokedFunction')
         if invoked_function == 'ask_gemini':
