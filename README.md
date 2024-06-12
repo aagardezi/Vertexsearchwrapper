@@ -80,6 +80,13 @@ gcloud projects add-iam-policy-binding [PROJECT_ID] --member="serviceAccount:cha
 
 gcloud projects add-iam-policy-binding [PROJECT_ID] --member="serviceAccount:chatbot-handler@[PROJECT_ID].iam.gserviceaccount.com" --role="roles/datastore.user"
 ```
+
+## Create topic for function trigger
+```
+gcloud pubsub topics create [TOPIC]
+```
+
+## Instructions for deploying the Cloud Run APP
 ```
 gcloud run deploy chat-handler --image=gcr.io/genaillentsearch/gitlab.com/google-cloud-ce/googlers/sgardezi/vertexsearchwrapper:latest --allow-unauthenticated --set-env-vars=PROJECT_ID=[PROJECT_ID],PROJECT_NUMBER=[PROJECT_NUMBER],AGENT_ID=[VERTEX_APP_ID],STORAGE_BUCKET_URI=[BUCKET_NAME],TOPIC_ID=[TOPIC],DATASTORE_ID=[DATASTORE_ID] --region=us-west1 --service-account=chatbot-handler@[PROJECT_ID].iam.gserviceaccount.com
 ```
