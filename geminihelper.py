@@ -7,7 +7,7 @@ from google.cloud import pubsub_v1
 
 def generate(current_project, request):
   vertexai.init(project=current_project, location="us-central1")
-  model = GenerativeModel("gemini-1.5-pro-preview-0409")
+  model = GenerativeModel("gemini-1.5-pro-001")
   responses = model.generate_content(
       [""f"{request}"""],
       generation_config=generation_config,
@@ -23,7 +23,7 @@ def generate(current_project, request):
 
 def generate_grounded(current_project, request):
   vertexai.init(project=current_project, location="us-central1")
-  model = GenerativeModel("gemini-1.0-pro-002")
+  model = GenerativeModel("gemini-1.5-pro-001")
 
   tool = Tool.from_retrieval(
     grounding.Retrieval(grounding.VertexAISearch(datastore=f"projects/{current_project}/locations/global/collections/default_collection/dataStores/bailiilegaldemo-ds_1711929181751"))
@@ -41,7 +41,7 @@ def generate_grounded(current_project, request):
 
 def generate_file_response(current_project, request, filename):
   vertexai.init(project=current_project, location="us-central1")
-  model = GenerativeModel("gemini-1.5-pro-preview-0409")
+  model = GenerativeModel("gemini-1.5-pro-001")
   responses = model.generate_content(
       [Part.from_uri(mime_type=filename.split()[1], uri=filename.split()[0]), ""f"{request}"""],
       generation_config=generation_config,
