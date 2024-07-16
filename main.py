@@ -49,6 +49,7 @@ function_table = {
     '501': dialoguehelper.open_gemini_fileqa_dialogue,
     '502': dialoguehelper.open_gemini_qa_dialogue_grounded,
     '503': dialoguehelper.open_gemini_filecompare_dialogue,
+    '504': dialoguehelper.open_gemini_filecompare_assess_claim,
 }
 
 

@@ -179,6 +179,56 @@ def open_gemini_filecompare_dialogue() -> Mapping[str, Any]:
             ]
             }}}}}
 
+def open_gemini_filecompare_assess_claim() -> Mapping[str, Any]:
+    return {
+    'action_response': {
+      'type': 'DIALOG',
+      'dialog_action': {
+        'dialog': {
+          'body':{
+            "sections": [
+                {
+                "header": "Ask Gemini a Question about a claim",
+                "widgets": [
+                    {
+                        "selectionInput": {
+                            "type": "MULTI_SELECT",
+                            "name": "filename",
+                            "label": "File Name",
+                            "multiSelectMaxSelectedItems": 3,
+                            "multiSelectMinQueryLength": 3,
+                            "items": []
+                        }
+                    },
+                    {
+                    "textInput": {
+                        "name": "llm_question",
+                        "label": "Question about the claim"
+                    }
+                    },
+                    {
+                    "buttonList": {
+                        "buttons": [
+                        {
+                            "text": "Assess Claim",
+                            "color": {
+                            "alpha": 1
+                            },
+                            "onClick": {
+                            "action": {
+                                "function": "ask_gemini_assessclaim"
+                            }
+                            },
+                            "disabled": False
+                        }
+                        ]
+                    }
+                    }
+                ]
+                }
+            ]
+            }}}}}
+
 def handle_card_clicked(event_data, project_id, topic_id):
     if event_data.get('type') == 'CARD_CLICKED':
         invoked_function = event_data.get('common', dict()).get('invokedFunction')
@@ -222,6 +272,24 @@ def handle_card_clicked(event_data, project_id, topic_id):
                                 print(form_inputs.get('filename'))
                                 space_name = event_data['space']['name']
                                 geminihelper.publish_gemini_compare_message(project_id, topic_id, llm_question, filepath1, filepath2, space_name)
+                                return {
+                                    "actionResponse": {
+                                        "type": "NEW_MESSAGE",
+                                    },
+                                    "text": f"{llm_question}\nRequest submitted, awaiting response... :gemini-animated:",
+                                }, True
+        if invoked_function == 'ask_gemini_assessclaim':
+            if common := event_data.get('common'):
+                if form_inputs := common.get('formInputs'):
+                    if contact_name := form_inputs.get('llm_question'):
+                        if string_inputs := contact_name.get('stringInputs'):
+                            if llm_question := string_inputs.get('value')[0]:
+                                filepath1 = form_inputs.get('filename').get('stringInputs').get('value')[0]
+                                filepath2 = form_inputs.get('filename').get('stringInputs').get('value')[1]
+                                filepath3 = form_inputs.get('filename').get('stringInputs').get('value')[2]
+                                print(form_inputs.get('filename'))
+                                space_name = event_data['space']['name']
+                                geminihelper.publish_gemini_assess_claim(project_id, topic_id, llm_question, filepath1, filepath2, filepath3, space_name)
                                 return {
                                     "actionResponse": {
                                         "type": "NEW_MESSAGE",
