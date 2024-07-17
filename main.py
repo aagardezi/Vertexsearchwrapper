@@ -97,6 +97,8 @@ def handler():
                 return utils.list_blobs_dialogue(function_table[str(command_id)]())
             elif int(command_id) == 503:
                 return utils.list_blobs_dialogue(function_table[str(command_id)]())
+            elif int(command_id) == 504:
+                return utils.list_blobs_dialogue(function_table[str(command_id)]())
             else:
                 return function_table[str(command_id)]()
         else:
