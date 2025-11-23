@@ -238,12 +238,13 @@ def handle_card_clicked(event_data, project_id, topic_id):
                     if contact_name := form_inputs.get('llm_question'):
                         if string_inputs := contact_name.get('stringInputs'):
                             if llm_question := string_inputs.get('value')[0]:
-                                response_message = geminihelper.generate(project_id, llm_question)
+                                space_name = event_data['space']['name']
+                                geminihelper.publish_gemini_ent_message(project_id, topic_id, llm_question, space_name)
                                 return {
                                     "actionResponse": {
                                         "type": "NEW_MESSAGE",
                                     },
-                                    "text": f"{response_message}",
+                                    "text": f"{llm_question}\nRequest submitted, awaiting response... :gemini-animated:",
                                 }, True
         
         if invoked_function == 'ask_gemini_file':

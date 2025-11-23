@@ -86,4 +86,10 @@ def publish_gemini_assess_claim(current_project, topic_id, request, filename1, f
     future = publisher.publish(topic_path, request.encode("utf-8"), request_type="Claim", uri1=filename1.split()[0], mime_type1=filename1.split()[1], uri2=filename2.split()[0], mime_type2=filename2.split()[1], uri3=filename3.split()[0], mime_type3=filename3.split()[1], spacename=space_name)
     print(future.result())
 
+def publish_gemini_ent_message(current_project, topic_id, request, space_name):
+    publisher = pubsub_v1.PublisherClient()
+    topic_path = publisher.topic_path(current_project, topic_id)
+    future = publisher.publish(topic_path, request.encode("utf-8"), request_type="Ent", spacename=space_name)
+    print(future.result())
+
 

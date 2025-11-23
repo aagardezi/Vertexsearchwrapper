@@ -90,3 +90,26 @@ gcloud pubsub topics create [TOPIC]
 ```
 gcloud run deploy chat-handler --image=gcr.io/genaillentsearch/gitlab.com/google-cloud-ce/googlers/sgardezi/vertexsearchwrapper:latest --allow-unauthenticated --set-env-vars=PROJECT_ID=[PROJECT_ID],PROJECT_NUMBER=[PROJECT_NUMBER],AGENT_ID=[VERTEX_APP_ID],STORAGE_BUCKET_URI=[BUCKET_NAME],TOPIC_ID=[TOPIC],DATASTORE_ID=[DATASTORE_ID] --region=us-west1 --service-account=chatbot-handler@[PROJECT_ID].iam.gserviceaccount.com
 ```
+
+gcloud run deploy chat-handler --image=gcr.io/genaillentsearch/gitlab.com/google-cloud-ce/googlers/sgardezi/vertexsearchwrapper:latest --set-env-vars=PROJECT_ID=admiral-demo-429523,PROJECT_NUMBER=358689571117,AGENT_ID=admiral-demo-agent_1721086521076,STORAGE_BUCKET_URI=demo-customer-claims-data-sg,TOPIC_ID=GeminiChatTriggerTopic-ADMIRAL,DATASTORE_ID=admiral-demo-ds_1721086550709 --region=us-west1 --service-account=chatbot-handler@admiral-demo-429523.iam.gserviceaccount.com
+
+
+gcloud projects add-iam-policy-binding admiral-demo-429523 --member="serviceAccount:chatbot-handler@admiral-demo-429523.iam.gserviceaccount.com" --role="roles/aiplatform.user"
+
+gcloud projects add-iam-policy-binding admiral-demo-429523 --member="serviceAccount:chatbot-handler@admiral-demo-429523.iam.gserviceaccount.com" --role="roles/discoveryengine.admin"
+
+gcloud projects add-iam-policy-binding admiral-demo-429523 --member="serviceAccount:chatbot-handler@admiral-demo-429523.iam.gserviceaccount.com" --role="roles/storage.objectViewer"
+
+gcloud projects add-iam-policy-binding admiral-demo-429523 --member="serviceAccount:chatbot-handler@admiral-demo-429523.iam.gserviceaccount.com" --role="roles/bigquery.dataEditor"
+
+gcloud projects add-iam-policy-binding admiral-demo-429523 --member="serviceAccount:chatbot-handler@admiral-demo-429523.iam.gserviceaccount.com" --role="roles/chat.owner"
+
+gcloud projects add-iam-policy-binding admiral-demo-429523 --member="serviceAccount:chatbot-handler@admiral-demo-429523.iam.gserviceaccount.com" --role="roles/cloudfunctions.serviceAgent"
+
+gcloud projects add-iam-policy-binding admiral-demo-429523 --member="serviceAccount:chatbot-handler@admiral-demo-429523.iam.gserviceaccount.com" --role="roles/pubsub.publisher"
+
+gcloud projects add-iam-policy-binding admiral-demo-429523 --member="serviceAccount:chatbot-handler@admiral-demo-429523.iam.gserviceaccount.com" --role="roles/pubsub.subscriber"
+
+gcloud projects add-iam-policy-binding admiral-demo-429523 --member="serviceAccount:chatbot-handler@admiral-demo-429523.iam.gserviceaccount.com" --role="roles/run.invoker"
+
+gcloud projects add-iam-policy-binding admiral-demo-429523 --member="serviceAccount:chatbot-handler@admiral-demo-429523.iam.gserviceaccount.com" --role="roles/datastore.user"
