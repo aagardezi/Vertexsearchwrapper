@@ -10,19 +10,19 @@ def open_gemini_qa_dialogue() -> Mapping[str, Any]:
           'body':{
             "sections": [
                 {
-                "header": "Ask Gemini a Question",
+                "header": "Ask Gemini LSEG Agent a Question",
                 "widgets": [
                     {
                     "textInput": {
                         "name": "llm_question",
-                        "label": "Question for Gemini 1.5"
+                        "label": "Question for Gemini LSEG Agent"
                     }
                     },
                     {
                     "buttonList": {
                         "buttons": [
                         {
-                            "text": "Ask Gemini 1.5",
+                            "text": "Ask Gemini LSEG Agent",
                             "color": {
                             "alpha": 1
                             },
